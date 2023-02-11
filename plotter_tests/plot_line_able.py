@@ -46,12 +46,12 @@ while running:
     data = b''
     while len(data) < 8:
         data += s.recv(1)
-    _, y, _, r = struct.unpack('<hhhh', data[:8])
+    y, _, _, r = struct.unpack('<hhhh', data[:8])
     y_value = y/100 
-    r_value = r/1 - r_value
+    r_value = r/1 
     print(f"y={y/100},r={r/1}")
     data=data[8:]
-    x_pos_new = x_pos + r_value * math.cos(math.radians(y_value))
+    x_pos_new = x_pos + r_value * math.cos(math.radians(y_value)) 
     y_pos_new = y_pos + r_value * math.sin(math.radians(y_value))
     draw_line(x_pos, y_pos, x_pos_new, y_pos_new)
     x_pos = x_pos_new
