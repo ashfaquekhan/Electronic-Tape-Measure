@@ -41,14 +41,15 @@ class DrawingWidget(QWidget):
 
     def paintEvent(self, event):
         painter = QPainter(self)
-        pen = QPen(QColor(255, 255, 255))
+        pen = QPen(QColor(0,0,0))
         pen.setWidth(2)
         painter.setPen(pen)
         for line in self.lines:
             painter.drawLine(*line)
 
     def addLine(self, x1, y1, x2, y2):
-        self.lines.append((x1, y1, x2, y2))
+        if x1 != x2 or y1 != y2:
+            self.lines.append((x1, y1, x2, y2))
         self.update()
 
 def readData(s, drawing_widget):
@@ -87,3 +88,4 @@ if __name__ == '__main__':
     t = threading.Thread(target=readData, args=(s, main_window.drawing_widget))
     t.start()
     sys.exit(app.exec_())
+    t.join()
