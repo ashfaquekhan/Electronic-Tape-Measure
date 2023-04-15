@@ -135,13 +135,16 @@ class MainWindow(QWidget):
         self.paint_plot.setGeometry(500,100,400,3800)
         self.paint_plot.setVisible(True)
 
+        self.reset_button = QPushButton("Reset")
+        self.reset_button.clicked.connect(self.reset_clicked)
 
         # Create a layout for the UI
         layout = QVBoxLayout()
         layout.addLayout(device_layout)
-        layout.addWidget(self.data_recv_label)
-
         layout.addWidget(self.paint_plot)
+        layout.addWidget(self.data_recv_label)
+        
+        layout.addWidget(self.reset_button)
 
         self.setLayout(layout)
         self.thread =None
@@ -161,6 +164,13 @@ class MainWindow(QWidget):
 
     def connect_finished(self):
         self.connect_button.setEnabled(True)
+
+    def reset_clicked(self):
+        self.paint_plot.path = QPainterPath()
+        self.paint_plot.update()
+        global x_pos, y_pos
+        x_pos = 0
+        y_pos = 0
 
 
 app = QApplication(sys.argv)
