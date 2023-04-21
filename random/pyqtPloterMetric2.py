@@ -4,7 +4,7 @@ import struct
 import sys
 from PyQt5.QtWidgets import QApplication, QWidget, QComboBox, QLabel, QVBoxLayout, QHBoxLayout, QPushButton
 from PyQt5.QtCore import Qt, QThread, pyqtSignal,QPoint, QLineF, QPointF
-from PyQt5.QtGui import QPainter, QColor, QPen,QPolygon,QPainterPath,QTransform
+from PyQt5.QtGui import QPainter, QColor, QPen,QPolygon,QPainterPath
 import ctypes
 import math
 
@@ -76,7 +76,8 @@ class DrawingWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.path = QPainterPath()
-        self.points=[]
+        self.points = []
+        self.scale_factor = 1.0
         
     def paintEvent(self, event):
         qp = QPainter(self)
@@ -87,21 +88,31 @@ class DrawingWidget(QWidget):
 
         # Adjust the coordinate system to make the center of the widget the origin
         qp.translate(self.width() / 2, self.height() / 2)
-        qp.scale(1, -1)
+        qp.scale(self.scale_factor, -self.scale_factor)
 
         # Draw the path using the adjusted coordinate system
         qp.drawPath(self.path)
-        
+
+    def wheelEvent(self, event):
+        delta = event.angleDelta().y()
+        if delta > 0:
+            self.scale_factor *= 1.1
+        else:
+            self.scale_factor /= 1.1
+        self.update()
+
     def addLine(self, x1, y1, x2, y2):
         if x1 != x2 or y1 != y2:
             self.path.lineTo(x2, y2)
-            self.points.append((x2,y2))
+            self.points.append((x2, y2))
         self.update()
+
 
 
 class MetricsWidget(QWidget):
     def __init__(self):
         super().__init__(parent=None)
+        self.scale_factor = 1.0
         self.path = QPainterPath()
         self.points=[]
         self.area = 0.0
@@ -130,14 +141,24 @@ class MetricsWidget(QWidget):
 
     def paintEvent(self,e):
         qp = QPainter(self)
+        qp.fillRect(e.rect(), QColor(0, 0, 0))
         qp.translate(self.width() / 2, self.height() / 2)
         qp.scale(1, -1)
+        qp.scale(self.scale_factor, -self.scale_factor)
         if((self.xs and self.xe and self.ys and self.ye)!=None):
             self.draw_lines(qp)
             self.draw_polygon(qp)
             self.drawPoint(qp)
             self.drawDisplacement(qp)
     
+    def wheelEvent(self, event):
+        delta = event.angleDelta().y()
+        if delta > 0:
+            self.scale_factor *= 1.1
+        else:
+            self.scale_factor /= 1.1
+        self.update()
+
     def drawPoint(self,qp):
         qp.setPen(QPen(Qt.red, 8))
         if len(self.points) >= 2:
