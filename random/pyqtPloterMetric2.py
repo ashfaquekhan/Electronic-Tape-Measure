@@ -4,7 +4,7 @@ import struct
 import sys
 from PyQt5.QtWidgets import QApplication, QWidget, QComboBox, QLabel, QVBoxLayout, QHBoxLayout, QPushButton
 from PyQt5.QtCore import Qt, QThread, pyqtSignal,QPoint, QLineF, QPointF
-from PyQt5.QtGui import QPainter, QColor, QPen,QPolygon,QPainterPath
+from PyQt5.QtGui import QPainter, QColor, QPen,QPolygon,QPainterPath,QTransform
 import ctypes
 import math
 
@@ -106,22 +106,25 @@ class MetricsWidget(QWidget):
         self.points=[]
         self.area = 0.0
         self.perimeter=0.0
+        self.xs=None
+        self.ys=None
+        self.xe=None
+        self.ye=None
+        self.displacement=None
+        self.penBl = QPen(Qt.blue, 2, Qt.SolidLine)
+        self.penBk = QPen(Qt.black, 2, Qt.SolidLine)
+        self.penYl = QPen(Qt.green, 2, Qt.SolidLine)
     
     def displayMetrics(self,coordinates):
         self.points=coordinates
-        # pen_distance = QPen(QColor(255, 0, 0))
-        # pen_displacement = QPen(QColor(0, 255, 0))
-        # total_distance = 0
-        # start_point = None
-        # prev_point = None
+        self.xs,self.ys=map(int, self.points[1])
+        self.xe,self.ye=map(int, self.points[-1])
         self.calculate_area()
         self.perimeter = sum(QLineF(QPointF(*p1), QPointF(*p2)).length() for p1, p2 in zip(self.points, self.points[1:]))
+        self.displacement = math.hypot(self.xe - self.xs, self.ye - self.ys)
+        self.x_displacement = self.xe - self.xs
+        self.y_displacement = self.ye - self.ys
         # result_label = QLabel(f"Area: {self.area:.2f}\nPerimeter: {self.perimeter:.2f}")
-        
-        # layout = QVBoxLayout()
-        # layout.addWidget(result_label)
-        # self.setLayout(layout)
-        # self.show()
         print(f"Area: {self.area:.2f}\nPerimeter: {self.perimeter:.2f}")
         self.update()
 
@@ -129,8 +132,26 @@ class MetricsWidget(QWidget):
         qp = QPainter(self)
         qp.translate(self.width() / 2, self.height() / 2)
         qp.scale(1, -1)
-        self.draw_lines(qp)
-        self.draw_polygon(qp)
+        if((self.xs and self.xe and self.ys and self.ye)!=None):
+            self.draw_lines(qp)
+            self.draw_polygon(qp)
+            self.drawPoint(qp)
+            self.drawDisplacement(qp)
+    
+    def drawPoint(self,qp):
+        qp.setPen(QPen(Qt.red, 8))
+        if len(self.points) >= 2:
+            qp.drawPoint(self.xs, self.ys)
+            qp.setPen(QPen(Qt.blue, 8))
+            qp.drawPoint(self.xe, self.ye)
+
+    def drawDisplacement(self,qp):
+        qp.setPen(self.penYl)
+        qp.drawLine(self.xs, self.ys, self.xe, self.ye)
+        qp.setPen(self.penBk)
+        qp.drawLine(self.xs, self.ys, self.xs + self.x_displacement, self.ys)
+        qp.setPen(self.penBl)
+        qp.drawLine(self.xs, self.ys, self.xs, self.ys + self.y_displacement)
 
     def draw_lines(self, qp):
         pen = QPen(Qt.black, 2, Qt.SolidLine)
@@ -142,7 +163,7 @@ class MetricsWidget(QWidget):
 
     def draw_polygon(self, qp):
         polygon = QPolygon([QPoint(int(p[0]), int(p[1])) for p in self.points])
-        brush = Qt.green
+        brush = Qt.yellow
         qp.setBrush(brush)
         qp.drawPolygon(polygon)     
 
@@ -179,13 +200,15 @@ class MainWindow(QWidget):
         device_layout.addWidget(self.connect_button)
         #button UI
 
-     
         self.metric_plot=MetricsWidget()
+        # self.metric_plot.setMaximumWidth(400)
+        # self.metric_plot.setContentsMargins(0,0,400,400)
         self.metric_plot.setVisible(True)
 
         # Create a layout for ploter
         self.paint_plot=DrawingWidget() 
-        self.paint_plot.setGeometry(500,100,400,3800)
+        # self.paint_plot.setMaximumWidth(400)
+        # self.paint_plot.setContentsMargins(0,0,400,400)
         self.paint_plot.setVisible(True)
 
         self.reset_button = QPushButton("Reset")
@@ -193,12 +216,17 @@ class MainWindow(QWidget):
 
         self.generate_button = QPushButton("Generate")
         self.generate_button.clicked.connect(self.generate_button_clicked)
+        
+        plotLayout = QHBoxLayout()
+        plotLayout.addWidget(self.paint_plot)
+        plotLayout.addWidget(self.metric_plot)
 
         # Create a layout for the UI
         layout = QVBoxLayout()
+        layout.addLayout(plotLayout)
         layout.addLayout(device_layout)
-        layout.addWidget(self.paint_plot)
-        layout.addWidget(self.metric_plot)
+        # layout.addWidget(self.paint_plot)
+        # layout.addWidget(self.metric_plot)
         layout.addWidget(self.data_recv_label)
         layout.addWidget(self.generate_button)
         layout.addWidget(self.reset_button)
@@ -238,8 +266,13 @@ class MainWindow(QWidget):
         self.metric_plot.points.clear()
         self.metric_plot.area=0.0
         self.metric_plot.perimeter=0.0
+        self.metric_plot.xs=None
+        self.metric_plot.xe=None
+        self.metric_plot.ys=None
+        self.metric_plot.ye=None
+        self.metric_plot.x_displacement=self.metric_plot.y_displacement=None
+        self.metric_plot.displacement=None
         
-
 
 app = QApplication(sys.argv)
 window = MainWindow()
