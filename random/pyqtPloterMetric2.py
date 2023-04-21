@@ -107,8 +107,6 @@ class DrawingWidget(QWidget):
             self.points.append((x2, y2))
         self.update()
 
-
-
 class MetricsWidget(QWidget):
     def __init__(self):
         super().__init__(parent=None)
@@ -123,8 +121,8 @@ class MetricsWidget(QWidget):
         self.ye=None
         self.displacement=None
         self.penBl = QPen(Qt.blue, 2, Qt.SolidLine)
-        self.penBk = QPen(Qt.black, 2, Qt.SolidLine)
-        self.penYl = QPen(Qt.green, 2, Qt.SolidLine)
+        self.penWt = QPen(Qt.white, 2, Qt.SolidLine)
+        self.penGr = QPen(Qt.green, 2, Qt.SolidLine)
     
     def displayMetrics(self,coordinates):
         self.points=coordinates
@@ -167,9 +165,9 @@ class MetricsWidget(QWidget):
             qp.drawPoint(self.xe, self.ye)
 
     def drawDisplacement(self,qp):
-        qp.setPen(self.penYl)
+        qp.setPen(self.penGr)
         qp.drawLine(self.xs, self.ys, self.xe, self.ye)
-        qp.setPen(self.penBk)
+        qp.setPen(self.penWt)
         qp.drawLine(self.xs, self.ys, self.xs + self.x_displacement, self.ys)
         qp.setPen(self.penBl)
         qp.drawLine(self.xs, self.ys, self.xs, self.ys + self.y_displacement)
@@ -214,44 +212,37 @@ class MainWindow(QWidget):
         self.data_recv_label = QLabel()
         self.data_recv_label.setAlignment(Qt.AlignCenter)
 
-        # Create a layout for the device selection UI
-        device_layout = QHBoxLayout()
-        device_layout.addWidget(QLabel("Select Bluetooth Device: "))
-        device_layout.addWidget(self.device_combo)
-        device_layout.addWidget(self.connect_button)
-        #button UI
-
-        self.metric_plot=MetricsWidget()
-        # self.metric_plot.setMaximumWidth(400)
-        # self.metric_plot.setContentsMargins(0,0,400,400)
-        self.metric_plot.setVisible(True)
-
-        # Create a layout for ploter
-        self.paint_plot=DrawingWidget() 
-        # self.paint_plot.setMaximumWidth(400)
-        # self.paint_plot.setContentsMargins(0,0,400,400)
-        self.paint_plot.setVisible(True)
-
         self.reset_button = QPushButton("Reset")
         self.reset_button.clicked.connect(self.reset_clicked)
 
         self.generate_button = QPushButton("Generate")
         self.generate_button.clicked.connect(self.generate_button_clicked)
+
+        #button UI
+
+        self.metric_plot=MetricsWidget()
+        self.metric_plot.setVisible(True)
+
+        # Create a layout for ploter
+        self.paint_plot=DrawingWidget() 
+        self.paint_plot.setVisible(True)
         
-        plotLayout = QHBoxLayout()
+        plotLayout = QVBoxLayout()
         plotLayout.addWidget(self.paint_plot)
         plotLayout.addWidget(self.metric_plot)
 
-        # Create a layout for the UI
-        layout = QVBoxLayout()
-        layout.addLayout(plotLayout)
-        layout.addLayout(device_layout)
-        # layout.addWidget(self.paint_plot)
-        # layout.addWidget(self.metric_plot)
-        layout.addWidget(self.data_recv_label)
-        layout.addWidget(self.generate_button)
-        layout.addWidget(self.reset_button)
+        buttons_layout = QVBoxLayout()
+        buttons_layout.addWidget(QLabel("Select Bluetooth Device: "))
+        buttons_layout.addWidget(self.device_combo)
+        buttons_layout.addWidget(self.connect_button)
+        buttons_layout.addWidget(self.data_recv_label)
+        buttons_layout.addWidget(self.generate_button)
+        buttons_layout.addWidget(self.reset_button)
 
+        # Create a layout for the UI
+        layout = QHBoxLayout()
+        layout.addLayout(plotLayout)
+        layout.addLayout(buttons_layout)
         self.setLayout(layout)
         self.thread =None
 
