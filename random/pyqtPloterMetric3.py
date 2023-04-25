@@ -2,7 +2,7 @@ import bluetooth
 import socket
 import struct
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QComboBox, QLabel,QPlainTextEdit, QVBoxLayout, QHBoxLayout, QPushButton,QFrame
+from PyQt5.QtWidgets import QApplication, QWidget, QComboBox, QLabel,QPlainTextEdit, QVBoxLayout, QHBoxLayout, QPushButton,QFrame,QDoubleSpinBox
 from PyQt5.QtCore import Qt, QThread, pyqtSignal,QPoint, QLineF, QPointF
 from PyQt5.QtGui import QPainter, QColor, QPen,QPolygon,QPainterPath
 import ctypes
@@ -12,7 +12,7 @@ x_pos = 0
 y_pos = 0
 r_value = 0
 y_value = 0
-
+rot_const=0
 class BluetoothThread(QThread):
     data_received = pyqtSignal(str)
     
@@ -51,16 +51,16 @@ class BluetoothThread(QThread):
         print("CONNECTED")
         d = "0"
         s.send(d.encode())
-
+        curr_ang=0.0
+        prev_ang=0.0
         while True:
-            global x_pos, y_pos
+            global x_pos, y_pos,rot_const
             data = b''
             while len(data) < 8:
                 data += s.recv(1)
             x, y, z, r = struct.unpack('<hhhh', data[:8])
             #print(f"raw data={data} : x={x/100}, y={y/100}, z={z/100}")
-            # print(f"x={x/100}, y={y/100}, z={z/100} ,r={r/1}")
-            self.data_received.emit(f"x={x/100}, y={y/100}, z={z/100} ,r={r/1}")
+            self.data_received.emit(f"x={x/100}, y={y/100}, z={z/100} ,r={r/1},_r={rot_const}")
             data = data[8:]
             y_value = x / 100
             r_value = r / 1
@@ -201,8 +201,7 @@ class MainWindow(QWidget):
         super().__init__()
         self.setWindowTitle("Accelerometer Data Visualization")
         self.setGeometry(100, 100, 1000, 3000)
-
-
+        global rot_const
         # Create a combo box to select the Bluetooth device to connect to
         self.device_combo = QComboBox()
         self.device_combo.setMaximumWidth(300)
@@ -213,16 +212,13 @@ class MainWindow(QWidget):
 
         # Create a label to display the selected Bluetooth device
         self.data_recv_label = QLabel()
-        self.metric_label=QLabel()
-        # self.data_recv_label.setAlignment(Qt.AlignCenter)
+        self.metric_label = QLabel()
 
         # Create a frame for the label
         self.data_recv_frame = QFrame()
         self.data_recv_frame.setFrameShape(QFrame.WinPanel)
         self.data_recv_frame.setFrameShadow(QFrame.Sunken)
-        # self.data_recv_frame.styleSheet()
         self.data_recv_frame.setAutoFillBackground(True)
-        # self.data_recv_frame.setLineWidth(2)
 
         self.reset_button = QPushButton("Reset")
         self.reset_button.clicked.connect(self.reset_clicked)
@@ -230,17 +226,41 @@ class MainWindow(QWidget):
         self.generate_button = QPushButton("Generate")
         self.generate_button.clicked.connect(self.generate_button_clicked)
 
-        #button UI
+        # Create a QDoubleSpinBox widget with a default value of 0.0
+        self.length_const = QDoubleSpinBox()
+        self.length_const.setRange(-1000.0, 1000.0)
+        self.length_const.setSingleStep(0.01)
+        self.length_const.setValue(0.00)
 
+        self.rotation_const = QDoubleSpinBox()
+        self.rotation_const.setRange(-360.0,360.0)
+        self.rotation_const.setSingleStep(0.5);
+        self.rotation_const.setValue(30)
+        rot_const=360/self.rotation_const.value()
+
+        constant_layout = QHBoxLayout()
+        constant_layout.addWidget(QLabel("Length Const:"))
+        constant_layout.addWidget(self.length_const)
+
+        rotation_const_laout = QHBoxLayout()
+        rotation_const_laout.addWidget(QLabel("Steps/Rotation:"))
+        rotation_const_laout.addWidget(self.rotation_const)
+
+        settings_layout =QVBoxLayout()
+        settings_layout.addLayout(constant_layout)
+        settings_layout.addLayout(rotation_const_laout)
+
+        # Button UI
         self.metric_plot = MetricsWidget()
         self.metric_plot.setVisible(True)
+
         # Add the label to the frame
         frame_layout = QVBoxLayout()
         frame_layout.addWidget(self.data_recv_label)
         frame_layout.addWidget(self.metric_label)
         self.data_recv_frame.setLayout(frame_layout)
 
-        # Create a layout for ploter
+        # Create a layout for plotter
         self.paint_plot = DrawingWidget() 
         self.paint_plot.setVisible(True)
         
@@ -252,16 +272,18 @@ class MainWindow(QWidget):
         buttons_layout.addWidget(QLabel("Select Bluetooth Device: "))
         buttons_layout.addWidget(self.device_combo)
         buttons_layout.addWidget(self.connect_button)
-        
-        # Add the frame to the layout
+
+        # Add the QDoubleSpinBox widget and label to the layout
+        buttons_layout.addLayout(settings_layout)
+
         buttons_layout.addWidget(self.generate_button)
         buttons_layout.addWidget(self.reset_button)
         buttons_layout.addWidget(self.data_recv_frame)
 
         # Create a layout for the UI
         layout = QHBoxLayout()
-        layout.addLayout(plotLayout,3)
-        layout.addLayout(buttons_layout,2)
+        layout.addLayout(plotLayout, 3)
+        layout.addLayout(buttons_layout, 2)
         self.setLayout(layout)
         self.thread = None
 
@@ -281,7 +303,7 @@ class MainWindow(QWidget):
 
     def data_received(self, data):
         self.data_recv_label.setText(data)
-        self.metric_label.setText(f"Area:{self.metric_plot.area:.2f}\nPerimeter:{self.metric_plot.perimeter:.2f}\nDisplacement:{self.metric_plot.displacement}\nPerimeter:{self.metric_plot.perimeter}\nX-Displacement:{self.metric_plot.x_displacement}\nY-Displacement:{self.metric_plot.y_displacement}\n")
+        self.metric_label.setText(f"Area:{self.metric_plot.area:.2f}\nDistance:{self.metric_plot.perimeter:.2f}\nDisplacement:{self.metric_plot.displacement:.2f}\nPerimeter:{self.metric_plot.perimeter}\nX-Displacement:{self.metric_plot.x_displacement}\nY-Displacement:{self.metric_plot.y_displacement}\n")
 
     def connect_finished(self):
         self.connect_button.setEnabled(True)
@@ -291,9 +313,10 @@ class MainWindow(QWidget):
         self.metric_plot.path=QPainterPath()
         self.paint_plot.update()
         self.metric_plot.update()
-        global x_pos, y_pos
+        global x_pos, y_pos,rot_const
         x_pos = 0
         y_pos = 0
+        rot_const=360/self.rotation_const.value()
         self.paint_plot.points.clear()
         self.metric_plot.points.clear()
         self.metric_plot.area=0.0
