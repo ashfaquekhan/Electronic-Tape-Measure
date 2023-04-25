@@ -136,7 +136,7 @@ class MetricsWidget(QWidget):
         self.x_displacement = self.xe - self.xs
         self.y_displacement = self.ye - self.ys
         # result_label = QLabel(f"Area: {self.area:.2f}\nPerimeter: {self.perimeter:.2f}")
-        print(f"Area: {self.area:.2f}\nPerimeter: {self.perimeter:.2f}\n")
+        # print(f"Area: {self.area:.2f}\nPerimeter: {self.perimeter:.2f}\n")
         self.update()
 
     def paintEvent(self,e):
@@ -161,18 +161,18 @@ class MetricsWidget(QWidget):
 
     def drawPoint(self,qp):
         qp.setPen(QPen(Qt.red, 8))
-        if len(self.points) >= 2:
+        if len(self.points) >= 1:
             qp.drawPoint(self.xs, self.ys)
             qp.setPen(QPen(Qt.blue, 8))
             qp.drawPoint(self.xe, self.ye)
 
     def drawDisplacement(self,qp):
         qp.setPen(self.penGr)
-        qp.drawLine(self.xs, self.ys, self.xe, self.ye)
+        qp.drawLine(int(self.xs), int(self.ys), int(self.xe), int(self.ye))
         qp.setPen(self.penWt)
-        qp.drawLine(self.xs, self.ys, self.xs + self.x_displacement, self.ys)
+        qp.drawLine(int(self.xs), int(self.ys), int(self.xs + self.x_displacement), int(self.ys))
         qp.setPen(self.penBl)
-        qp.drawLine(self.xs, self.ys, self.xs, self.ys + self.y_displacement)
+        qp.drawLine(int(self.xs), int(self.ys), int(self.xs), int(self.ys + self.y_displacement))
 
     def draw_lines(self, qp):
         pen = QPen(Qt.black, 2, Qt.SolidLine)
@@ -180,7 +180,7 @@ class MetricsWidget(QWidget):
         for i in range(len(self.points) - 1):
             x1, y1 = map(int, self.points[i])
             x2, y2 = map(int, self.points[i+1])
-            qp.drawLine(x1, y1, x2, y2)
+            qp.drawLine(int(x1), int(y1), int(x2), int(y2))
 
     def draw_polygon(self, qp):
         polygon = QPolygon([QPoint(int(p[0]), int(p[1])) for p in self.points])
@@ -321,12 +321,12 @@ class MainWindow(QWidget):
         self.metric_plot.points.clear()
         self.metric_plot.area=0.0
         self.metric_plot.perimeter=0.0
-        self.metric_plot.xs=None
-        self.metric_plot.xe=None
-        self.metric_plot.ys=None
-        self.metric_plot.ye=None
-        self.metric_plot.x_displacement=self.metric_plot.y_displacement=None
-        self.metric_plot.displacement=None
+        self.metric_plot.xs=0.0
+        self.metric_plot.xe=0.0
+        self.metric_plot.ys=0.0
+        self.metric_plot.ye=0.0
+        self.metric_plot.x_displacement=self.metric_plot.y_displacement=0.0
+        self.metric_plot.displacement=0.0
         
     def handle_text_changed(self, text):
         self.textbox.insertPlainText(text)
