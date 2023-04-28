@@ -1,4 +1,4 @@
-const byte AInput = 6;
+const byte AInput = 6; // i have connected 2 1k resistor from pin 6 & 7 to 5V
 const byte BInput = 7;
 const int led = 9;
 byte lastState = 0;
