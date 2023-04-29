@@ -337,14 +337,11 @@ class MainWindow(QWidget):
             self.metric_plot.displayMetrics(vpoints)
             self.metric_label.setText(f"Area:{self.metric_plot.area*self.length_const.value():.2f}\nDistance:{self.metric_plot.perimeter*self.length_const.value():.2f}\nDisplacement:{self.metric_plot.displacement*self.length_const.value():.2f}\nPerimeter:{self.metric_plot.perimeter*self.length_const.value()}\nX-Displacement:{self.metric_plot.x_displacement*self.length_const.value()}\nY-Displacement:{self.metric_plot.y_displacement*self.length_const.value()}\n")
 
-
     def geoJsonSave(self):
         # create a GeoJSON feature collection object
         for point in self.metric_plot.points:
             x,y = point
-            self.feature_collection["features"].append(
-            {"type": "Feature", "geometry": {"type": "Point", "coordinates": [x, y]}})
-        
+            self.feature_collection['features'].append({"type": "Feature", "geometry": {"type": "Point", "coordinates": [x, y]}})
         # prompt the user to choose a filename and location
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
