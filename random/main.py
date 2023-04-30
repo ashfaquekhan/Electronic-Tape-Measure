@@ -3,11 +3,16 @@ import socket
 import struct
 import sys
 from PyQt5.QtWidgets import QApplication, QWidget, QComboBox, QLabel,QFileDialog, QVBoxLayout, QHBoxLayout, QPushButton,QFrame,QDoubleSpinBox,QCheckBox
-from PyQt5.QtCore import Qt, QThread, pyqtSignal,QPoint, QLineF, QPointF
-from PyQt5.QtGui import QPainter, QColor, QPen,QPolygon,QPainterPath
+from PyQt5.QtCore import Qt, QThread, pyqtSignal,QPoint, QLineF, QPointF,pyqtSlot,QTimer
+from PyQt5.QtGui import QPainter, QColor, QPen,QPolygon,QPainterPath,QImage,QPixmap
+from PyQt5.QtOpenGL import QGLWidget 
+import OpenGL.GL as gl        # python wrapping of OpenGL
+from OpenGL import GLU 
 import math
 import ctypes
 import json
+from OpenGL.arrays import vbo
+import numpy as np
 
 x_pos = 0
 y_pos = 0
@@ -15,19 +20,121 @@ r_value = 0
 y_value = 0
 rot_const=0
 comp_mode=False
+x=0.0
+y=0.0
+z=0.0
+
+class GLWidget(QGLWidget):
+    def __init__(self, parent=None):
+        QGLWidget.__init__(self, parent)
+            
+    def initializeGL(self):
+        self.qglClearColor(QColor(0, 0, 0))    # initialize the screen to blue
+        gl.glEnable(gl.GL_DEPTH_TEST)                  # enable depth testing
+        self.initGeometry()
+        self.rotX = 0.0
+        self.rotY = 0.0
+        self.rotZ = 0.0
+         
+    def resizeGL(self, width, height):
+        gl.glViewport(0, 0, width, height)
+        gl.glMatrixMode(gl.GL_PROJECTION)
+        gl.glLoadIdentity()
+        aspect = width / float(height)
+
+        GLU.gluPerspective(45.0, aspect, 1.0, 100.0)
+        gl.glMatrixMode(gl.GL_MODELVIEW)
+
+    def paintGL(self):
+        gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
+
+        gl.glPushMatrix()    # push the current matrix to the current stack
+
+        gl.glTranslate(0.0, 0.0, -50.0)    # third, translate cube to specified depth
+        gl.glScale(20.0, 20.0, 20.0)       # second, scale cube
+        gl.glRotate(self.rotX, 1.0, 0.0, 0.0)
+        gl.glRotate(self.rotY, 0.0, 1.0, 0.0)
+        gl.glRotate(self.rotZ, 0.0, 0.0, 1.0)
+        gl.glTranslate(-0.5, -0.5, -0.5)   # first, translate cube center to origin
+
+        gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
+        gl.glEnableClientState(gl.GL_COLOR_ARRAY)
+
+        gl.glVertexPointer(3, gl.GL_FLOAT, 0, self.vertVBO)
+        gl.glColorPointer(3, gl.GL_FLOAT, 0, self.colorVBO)
+
+        gl.glDrawElements(gl.GL_LINES, len(self.cubeIdxArray), gl.GL_UNSIGNED_INT, self.cubeIdxArray)
+
+        gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
+        gl.glDisableClientState(gl.GL_COLOR_ARRAY)
+
+        gl.glPopMatrix()    # restore the previous modelview matrix
+        
+    def initGeometry(self):
+        vertices = [
+            # Front face
+            [0.0, 0.0, 0.0],
+            [1.0, 0.0, 0.0],
+            [1.0, 1.0, 0.0],
+            [0.0, 1.0, 0.0],
+            # Back face
+            [0.0, 0.0, 1.0],
+            [1.0, 0.0, 1.0],
+            [1.0, 1.0, 1.0],
+            [0.0, 1.0, 1.0],
+        ]
+
+        indices = [# Front face
+            0, 1, 2, 3,
+            4, 5, 6, 7,
+            0, 3, 7, 4,
+            1, 2, 6, 5,
+            2, 3, 7, 6,
+            0, 1, 5, 4,]
+
+        self.vertVBO = vbo.VBO(np.array(vertices, dtype=np.float32))
+        self.vertVBO.bind()
+
+        self.cubeIdxArray = vbo.VBO(np.array(indices, dtype=np.uint32),
+                                    target=gl.GL_ELEMENT_ARRAY_BUFFER)
+        self.cubeIdxArray.bind()
+        
+        self.cubeClrArray = np.array(
+                [[0.0, 0.0, 0.0],
+                 [1.0, 0.0, 0.0],
+                 [1.0, 1.0, 0.0],
+                 [0.0, 1.0, 0.0],
+                 [0.0, 0.0, 1.0],
+                 [1.0, 0.0, 1.0],
+                 [1.0, 1.0, 1.0],
+                 [0.0, 1.0, 1.0 ]])
+        self.colorVBO = vbo.VBO(np.reshape(self.cubeClrArray,
+                                           (1, -1)).astype(np.float32))
+        self.colorVBO.bind()
+
+    def setRot(self, x,y,z):
+        self.rotX = z
+        self.rotY = x
+        self.rotZ = y
+        self.update()
+
 class BluetoothThread(QThread):
     data_received = pyqtSignal(str)
     
-    def __init__(self, device_name, drawing_widget):
+    def __init__(self, device_name, drawing_widget,glWidget):
         super().__init__()
         self.device_name = device_name
         self.target_address = None
         self.drawing_widget = drawing_widget
+        self.glWidget =glWidget
         self.x_pos_new=x_pos
         self.y_pos_new=y_pos
         self.rot_en=True
         self.rot_en_in=False
         self.prev_pitch=0
+        self.x=0.0
+        self.y=0.0
+        self.z=0.0
         
     def run(self):
         nearby_devices = bluetooth.discover_devices()
@@ -58,20 +165,22 @@ class BluetoothThread(QThread):
         s.send(d.encode())
     
         while True:
-            global x_pos, y_pos,rot_const
+            global x_pos, y_pos,rot_const,x,y,z
+            self.x,self.y,self.z=x,y,z
             data = b''
             while len(data) < 8:
                 data += s.recv(1)
-            x, y, z, r = struct.unpack('<hhhh', data[:8])
-            z=z/100
-            y_value = x / 100
+            self.x, self.y, self.z, r = struct.unpack('<hhhh', data[:8])
+            self.z=self.z/100
+            y_value = self.x / 100
             r_value = r / 1
             if(self.rot_en_in and r and comp_mode):
-                r_value= int(r/1+((z-self.prev_pitch)/rot_const))
+                r_value= int(r/1+((self.z-self.prev_pitch)/rot_const))
                 self.rot_en=False
-            self.data_received.emit(f"x={x/100}, y={y/100}, z={z} ,r={r/1},_r={rot_const}")
+            self.data_received.emit(f"x={self.x/100}, y={self.y/100}, z={self.z} ,r={r/1},_r={rot_const}")
+            self.glWidget.setRot(self.x/100,self.y/100,self.z)
             data = data[8:]
-            self.prev_pitch=z
+            self.prev_pitch=self.z
             self.x_pos_new = x_pos + r_value * math.cos(math.radians(y_value))
             self.y_pos_new = y_pos + r_value * math.sin(math.radians(y_value))
             self.drawing_widget.addLine(self.x_pos_new, self.y_pos_new,x_pos,y_pos)
@@ -294,8 +403,15 @@ class MainWindow(QWidget):
         plotLayout.addWidget(self.paint_plot)
         plotLayout.addWidget(self.metric_plot)
 
+        #Glwidget
+        self.glWidget = GLWidget()
+        # timer = QTimer(self)
+        # timer.setInterval(20)   # period, in milliseconds
+        # timer.timeout.connect(self.glWidget.updateGL)
+        # timer.start()
 
         buttons_layout = QVBoxLayout()
+        buttons_layout.addWidget(self.glWidget)
         buttons_layout.addWidget(QLabel("Select Bluetooth Device: "))
         buttons_layout.addWidget(self.device_combo)
         buttons_layout.addWidget(self.connect_button)
@@ -319,7 +435,7 @@ class MainWindow(QWidget):
 
     def viewGeoJSON(self):
         vpoints=[]
-        
+        self.feature_collection = {"type": "FeatureCollection", "features": []}
         # prompt the user to select a file to load
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
@@ -351,7 +467,6 @@ class MainWindow(QWidget):
             with open(filename, "w") as outfile:
                 json.dump(self.feature_collection, outfile)
         
-
     def compensatorMode(self,pressed):
         global comp_mode
         if pressed:
@@ -366,15 +481,17 @@ class MainWindow(QWidget):
     
     def connect_clicked(self):
         device_name = self.device_combo.currentText()
+        
         if self.thread is not None:
             self.thread.terminate()
-        self.thread = BluetoothThread(device_name,self.paint_plot)
-        self.thread.data_received.connect(self.data_received)
+        self.thread = BluetoothThread(device_name,self.paint_plot,self.glWidget)
+        self.thread.data_received.connect(self.data_received_text)
         self.thread.finished.connect(self.connect_finished)
         self.connect_button.setEnabled(False)
         self.thread.start()
 
-    def data_received(self, data):
+    
+    def data_received_text(self, data):
         self.data_recv_label.setText(data)
         self.metric_label.setText(f"Area:{self.metric_plot.area*self.length_const.value():.2f}\nDistance:{self.metric_plot.perimeter*self.length_const.value():.2f}\nDisplacement:{self.metric_plot.displacement*self.length_const.value():.2f}\nPerimeter:{self.metric_plot.perimeter*self.length_const.value()}\nX-Displacement:{self.metric_plot.x_displacement*self.length_const.value()}\nY-Displacement:{self.metric_plot.y_displacement*self.length_const.value()}\n")
 
