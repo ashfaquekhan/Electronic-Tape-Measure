@@ -21,10 +21,10 @@ But some major devlopment which can be added or contributed(🥲) are :
 Altough it has some limitations, it does work, and works fin---e.
 
 It gives the following output to the user:
-*Distance
-*Displacement
-*Area
-*X and Y axis Displacement 
+* Distance
+* Displacement
+* Area
+* X and Y axis Displacement 
 
 Although, its very easy after we get the two points[start and end]. 
 
