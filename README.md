@@ -1,5 +1,7 @@
 # Digital Handheld Measurement Device
 #### [I will try to come up with a good name]
+![ezgif com-gif-to-apng](https://user-images.githubusercontent.com/42895491/235434160-bbd7a57a-e483-450a-81c9-0b649d452f14.png)
+
 ## Description
 This is a very simple and basic tool which helps in measuring distance [using a rotary encoder ] and also knows the heading-refference/orientation via an IMU sensor[MPU-6050].
 
