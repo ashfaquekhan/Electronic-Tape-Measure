@@ -17,7 +17,7 @@ But some major devlopment which can be added or contributed(🥲) are :
 6. Using a hall effect sensor , instead of a rotary encoder[we just went with the flow, although we knew it was coming].
 7. Closing the project and not working on stupid ideas,[but it can be effeicent if made ina very small form factor]. 
 
-## Still It gets the Job Done 😮💨 :
+## Still It gets the Job Done 🔥 :
 Altough it has some limitations, it does work, and works fin---e.
 
 It gives the following output to the user:
@@ -29,6 +29,38 @@ It gives the following output to the user:
 Although, its very easy after we get the two points[start and end]. 
 
 ## Demo Video 📺
+[![Preview](https://img.youtube.com/vi/7DulpQM3AjI/maxresdefault.jpg)](https://www.youtube.com/watch?v=7DulpQM3AjI)
+
+
+## Compensator Testing 
+[![Preview](https://img.youtube.com/vi/4gAEML8vUaQ/maxresdefault.jpg)](https://youtu.be/4gAEML8vUaQ)
+
+
+## Circuit
+The First Prototype Consists of : 
+* Arduino Pro Micro
+* Bluetooth HC-05
+* Rotary Encoder
+* MPU-6050
+
+
+### Shcematics: 
+![Schematic_prjX_2023-04-29 (1)](https://user-images.githubusercontent.com/42895491/235427178-459d43a8-e698-48b8-bb20-69d057791a28.png)
+### PCB: 
+<img width="868" alt="image" src="https://user-images.githubusercontent.com/42895491/235429166-7d047377-3a9f-44f3-8d62-b9ebc6102ccc.png">
+
+
+## Current Build [🙈🙉🙊]
+![20230501_134313](https://user-images.githubusercontent.com/42895491/235428368-39fea1a1-82fa-4dbb-be33-a042bd999802.jpg)
+![20230501_134249](https://user-images.githubusercontent.com/42895491/235428373-f043af6d-c804-4358-b16f-b4fffd3389d8.jpg)
+
+
+## I tried to change the Form-Factor
+### [Do not mind the HC-05(Bluetooth 2.0) connected to Arduino Nano RP2040 which already has a BLE 5.0]
+![20230501_134422](https://user-images.githubusercontent.com/42895491/235428654-c3c58829-6a2d-413f-86c0-216b2d327559.jpg)
+
+
+
 
 
 
