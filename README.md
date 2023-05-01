@@ -48,7 +48,7 @@ The First Prototype Consists of :
 
 ### Shcematics: 
 ![Schematic_prjX_2023-04-29 (1)](https://user-images.githubusercontent.com/42895491/235427178-459d43a8-e698-48b8-bb20-69d057791a28.png)
-### PCB: 
+### PCB [What it Should look like]: 
 <img width="868" alt="image" src="https://user-images.githubusercontent.com/42895491/235429166-7d047377-3a9f-44f3-8d62-b9ebc6102ccc.png">
 
 
