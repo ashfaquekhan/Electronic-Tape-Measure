@@ -17,7 +17,7 @@ But some major devlopment which can be added or contributed(🥲) are :
 6. Using a hall effect sensor , instead of a rotary encoder[we just went with the flow, although we knew it was coming].
 7. Closing the project and not working on stupid ideas,[but it can be effeicent if made ina very small form factor]. 
 
-## Still It gets the Job Done 😮‍💨 :
+## Still It gets the Job Done 😮💨 :
 Altough it has some limitations, it does work, and works fin---e.
 
 It gives the following output to the user:
