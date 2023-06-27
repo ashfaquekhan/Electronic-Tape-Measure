@@ -17,8 +17,10 @@ But some major development that can be added or contributed(🥲) are :
 4. Adding a pointer/sight/reference to help the user holding it know where to start and stop.
 5. Using a better IMU Sensor, we are using MPU6050 on top with DMP, so there is a significant yaw drift[we had only one thing to do 😔].
 6. Using a hall effect sensor, instead of a rotary encoder[we just went with the flow, although we knew it was coming].
-6.5. Angle interchangeablity.
-7. Closing the project and not working on stupid ideas,[but it can be efficient if made in a very small form factor]. 
+
+7. Angle interchangeablity.
+
+8. Closing the project and not working on stupid ideas,[but it can be efficient if made in a very small form factor]. 
 
 ## Still It Gets the Job Done 🔥 :
 Although it has some limitations, it does work and works fine.
