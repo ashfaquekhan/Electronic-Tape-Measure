@@ -1,4 +1,4 @@
-# Digital Handheld Measurement Device https://github.com/ashfaquekhan/Electronic-Tape-Measure
+# Digital Handheld Measurement Device [https://github.com/ashfaquekhan/Electronic-Tape-Measure](https://www.hackster.io/turingTurtle/electronic-tape-measure-imu-rotary-encoder-ble-gui-5cb5ba)
 #### [I will try to come up with a good name]
 ![ezgif com-gif-to-apng](https://user-images.githubusercontent.com/42895491/235434160-bbd7a57a-e483-450a-81c9-0b649d452f14.png)
 
